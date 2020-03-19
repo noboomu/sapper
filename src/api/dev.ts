@@ -58,8 +58,7 @@ class Watcher extends EventEmitter {
 	dev_server: DevServer;
 	proc: child_process.ChildProcess;
 	filewatchers: Array<{ close: () => void }>;
-	deferred: Deferred;
-
+	deferred: Deferred; 
 	crashed: boolean;
 	restarting: boolean;
 	current_build: {
@@ -337,14 +336,29 @@ class Watcher extends EventEmitter {
 			},
 
 			handle_result: (result: CompileResult) => {
+
+				
+				let build_info =  result.to_json(manifest_data, this.dirs);
+
+				build_info.legacy_assets = result.assets;
+				build_info.script_preloads = {};
+				if (result.script_preloads) {
+					Object.keys(result.script_preloads).forEach((facadeFileName) => {
+						// get relative filename, remove / or \ from the beginning of the string
+						const relativeFacedeFileName = facadeFileName.replace(routes, '').slice(1);
+						build_info.script_preloads[relativeFacedeFileName] = result.script_preloads[facadeFileName];
+					})
+				} 
+
 				fs.writeFileSync(
 					path.join(dest, 'build.json'),
 
 					// TODO should be more explicit that to_json has effects
-					JSON.stringify(result.to_json(manifest_data, this.dirs), null, '  ')
+					JSON.stringify(build_info, null, '  ')
 				);
 
 				const client_files = result.chunks.map(chunk => `client/${chunk.file}`);
+
 
 				create_serviceworker_manifest({
 					manifest_data,
@@ -434,6 +448,7 @@ class Watcher extends EventEmitter {
 					errors: result.errors,
 					warnings: result.warnings
 				});
+
 
 				handle_result(result);
 			}

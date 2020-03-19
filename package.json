@@ -1,6 +1,6 @@
 {
-  "name": "sapper",
-  "version": "0.27.10",
+  "name": "@noboomu/sapper",
+  "version": "0.27.12",
   "description": "The next small thing in web development, powered by Svelte",
   "bin": {
     "sapper": "./sapper"
@@ -72,7 +72,7 @@
     "prepublishOnly": "npm test",
     "update_mime_types": "curl http://svn.apache.org/repos/asf/httpd/httpd/trunk/docs/conf/mime.types | grep -e \"^[^#]\" > runtime/src/server/middleware/mime-types.md"
   },
-  "repository": "https://github.com/sveltejs/sapper",
+  "repository": "https://github.com/noboomu/sapper",
   "keywords": [
     "svelte",
     "isomorphic",
@@ -80,10 +80,10 @@
     "template",
     "express"
   ],
-  "author": "Rich Harris",
+  "author": "Joshua Bauer",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/sveltejs/sapper/issues"
   },
-  "homepage": "https://github.com/sveltejs/sapper#readme"
+  "homepage": "https://github.com/noboomu/sapper"
 }

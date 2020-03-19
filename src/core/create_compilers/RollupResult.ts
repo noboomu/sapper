@@ -13,6 +13,7 @@ export default class RollupResult implements CompileResult {
 	warnings: CompileError[];
 	chunks: Chunk[];
 	assets: Record<string, string>;
+	script_preloads: Record<string, string[]>;
 	css_files: CssFile[];
 	css: {
 		main: string,
@@ -34,11 +35,29 @@ export default class RollupResult implements CompileResult {
 			modules: Object.keys(chunk.modules)
 		}));
 
+
 		this.css_files = compiler.css_files;
 
 		// TODO populate this properly. We don't have named chunks, as in
 		// webpack, but we can have a route -> [chunk] map or something
 		this.assets = {};
+
+		this.script_preloads = {}
+		const entryChunk = compiler.chunks.find(ch => ch.isEntry)
+		const addImportsToScripsPreload = (facadeModuleId:string, chunk:Chunk) => {
+			chunk.imports.forEach((importItem:string) => {
+				if (this.script_preloads[facadeModuleId].indexOf(importItem) === -1) {
+					this.script_preloads[facadeModuleId].push(importItem);
+				}
+			})
+		}
+		
+		compiler.chunks.filter(chunk => !chunk.fileName.endsWith('.map')).forEach((chunk) => {
+			if (!chunk.isEntry && chunk.facadeModuleId) {
+				this.script_preloads[chunk.facadeModuleId] = [chunk.fileName, ...(entryChunk ? [entryChunk.fileName] : [])]
+				addImportsToScripsPreload(chunk.facadeModuleId, chunk)
+			}
+		})
 
 		if (typeof compiler.input === 'string') {
 			compiler.chunks.forEach(chunk => {

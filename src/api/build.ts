@@ -72,6 +72,9 @@ export async function build({
 
 	const manifest_data = create_manifest_data(routes, ext);
 
+	const { client, server, serviceworker } = await create_compilers(bundler, cwd, src, dest, false);
+
+ 
 	// create src/node_modules/@sapper/app.mjs and server.mjs
 	create_app({
 		bundler,
@@ -84,15 +87,26 @@ export async function build({
 		dev: false
 	});
 
-	const { client, server, serviceworker } = await create_compilers(bundler, cwd, src, dest, false);
-
 	const client_result = await client.compile();
 	oncompile({
 		type: 'client',
 		result: client_result
 	});
 
+ 
+
 	const build_info = client_result.to_json(manifest_data, { src, routes, dest });
+
+	build_info.legacy_assets = client_result.assets;
+	build_info.script_preloads = {};
+	if (client_result.script_preloads) {
+		Object.keys(client_result.script_preloads).forEach((facadeFileName) => {
+			// get relative filename, remove / or \ from the beginning of the string
+			const relativeFacedeFileName = facadeFileName.replace(routes, '').slice(1);
+			build_info.script_preloads[relativeFacedeFileName] = client_result.script_preloads[facadeFileName];
+		})
+	}
+
 
 	if (legacy) {
 		process.env.SAPPER_LEGACY_BUILD = 'true';
@@ -117,15 +131,16 @@ export async function build({
 		type: 'server',
 		result: server_stats
 	});
+ 
 
 	let serviceworker_stats;
 
 	if (serviceworker) {
-
+ 
 		const client_files = client_result.chunks
-			.filter(chunk => !chunk.file.endsWith('.map')) // SW does not need to cache sourcemap files
-			.map(chunk => `client/${chunk.file}`);
-
+		.filter(chunk => !chunk.file.endsWith('.map')) // SW does not need to cache sourcemap files
+		.map(chunk => `client/${chunk.file}`);
+	 
 		create_serviceworker_manifest({
 			manifest_data,
 			output,

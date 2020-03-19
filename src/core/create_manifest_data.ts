@@ -41,7 +41,7 @@ export default function create_manifest_data(cwd: string, extensions: string = '
 
 	const components: PageComponent[] = [];
 	const pages: Page[] = [];
-	const server_routes: ServerRoute[] = [];
+	const server_routes: ServerRoute[] = []; 
 
 	const default_layout: PageComponent = {
 		default: true,

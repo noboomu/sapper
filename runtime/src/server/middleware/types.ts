@@ -11,6 +11,7 @@ export type Page = {
 	parts: Array<{
 		name: string;
 		component: Component;
+		file?: string;
 		params?: (match: RegExpMatchArray) => Record<string, string>;
 		preload?: (data: any) => any | Promise<any>;
 	}>
@@ -46,6 +47,7 @@ export interface Req extends ClientRequest {
 	params: Record<string, string>;
 	query: Record<string, string>;
 	headers: Record<string, string>;
+	assetsBaseUrl?: string;
 }
 
 export interface Res extends ServerResponse {

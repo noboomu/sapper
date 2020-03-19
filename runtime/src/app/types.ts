@@ -25,7 +25,7 @@ export type ComponentLoader = {
 
 export type Route = {
 	pattern: RegExp;
-	parts: Array<{
+	parts: <{
 		i: number;
 		params?: (match: RegExpExecArray) => Record<string, string>;
 	}>;
@@ -35,7 +35,7 @@ export type Manifest = {
 	ignore: RegExp[];
 	root: ComponentConstructor;
 	error: () => Promise<{ default: ComponentConstructor }>;
-	pages: Route[]
+	pages: Route[];
 };
 
 export type ScrollPosition = {

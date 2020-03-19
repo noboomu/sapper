@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import URL from 'url';
 import { Manifest, Page, Req, Res } from './types';
 import { build_dir, dev, src_dir } from '@sapper/internal/manifest-server';
+
 import App from '@sapper/internal/App.svelte';
 
 export function get_page_handler(
@@ -17,7 +18,8 @@ export function get_page_handler(
 		? () => JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'))
 		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8')));
 
-	const template = dev
+
+	let template = dev
 		? () => read_template(src_dir)
 		: (str => () => str)(read_template(build_dir));
 
@@ -50,7 +52,8 @@ export function get_page_handler(
 			bundler: 'rollup' | 'webpack',
 			shimport: string | null,
 			assets: Record<string, string | string[]>,
-			legacy_assets?: Record<string, string>
+			legacy_assets?: Record<string, string>,
+			script_preloads?: Record<string, string[]>
 		 } = get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
@@ -59,15 +62,30 @@ export function get_page_handler(
 		// preload main.js and current route
 		// TODO detect other stuff we can preload? images, CSS, fonts?
 		let preloaded_chunks = Array.isArray(build_info.assets.main) ? build_info.assets.main : [build_info.assets.main];
+
+
+
 		if (!error && !is_service_worker_index) {
 			page.parts.forEach(part => {
 				if (!part) return;
 
 				// using concat because it could be a string or an array. thanks webpack!
 				preloaded_chunks = preloaded_chunks.concat(build_info.assets[part.name]);
+
+				
 			});
 		}
 
+		page.parts.forEach((part) => {
+			if (build_info.script_preloads && part && build_info.script_preloads[part.file]) {
+				build_info.script_preloads[part.file].forEach((preloadFile) => {
+					if (preloaded_chunks.indexOf(preloadFile) === -1) {
+						preloaded_chunks.push(preloadFile)
+					}
+				})
+			}
+		})
+ 
 		if (build_info.bundler === 'rollup') {
 			// TODO add dependencies and CSS
 			const link = preloaded_chunks
@@ -275,10 +293,12 @@ export function get_page_handler(
 			].filter(Boolean).join(',')}};`;
 
 			if (has_service_worker) {
-			//	script += `if('serviceWorker' in navigator)navigator.serviceWorker.register('${req.baseUrl}/service-worker.js');`;
-			script += `if('serviceWorker' in navigator) window.addEventListener('load',function(){navigator.serviceWorker.register('${req.baseUrl}/service-worker.js');});`;
+			 	//script += `if('serviceWorker' in navigator)navigator.serviceWorker.register('${req.baseUrl}/service-worker.js');`;
+			 script += `if('serviceWorker' in navigator) window.addEventListener('load',function(){navigator.serviceWorker.register('${req.baseUrl}/service-worker.js');});`;
 
-			}
+			} 
+
+			const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
 
 			const file = [].concat(build_info.assets.main).filter(file => file && /\.js$/.test(file))[0];
 			const main = `${req.baseUrl}/client/${file}`;
@@ -293,7 +313,7 @@ export function get_page_handler(
 			} else {
 				script += `</script><script src="${main}">`;
 			}
-
+ 
 			let styles: string;
 
 			// TODO make this consistent across apps
@@ -322,11 +342,25 @@ export function get_page_handler(
 			// users can set a CSP nonce using res.locals.nonce
 			const nonce_attr = (res.locals && res.locals.nonce) ? ` nonce="${res.locals.nonce}"` : '';
 
+			let preloads = '';
+
+			if(preloadFiles && preloadFiles.length > 0)
+			{
+	 
+
+				for( var i = 0; i < preloadFiles.length; i++ )
+				{
+					preloads += `<link rel="preload" as="script" href="${req.baseUrl}/client/${preloadFiles[i]}" crossorigin="use-credentials" >`; 
+				} 
+			}
+
+
 			const body = template()
 				.replace('%sapper.base%', () => `<base href="${req.baseUrl}/">`)
 				.replace('%sapper.scripts%', () => `<script${nonce_attr}>${script}</script>`)
 				.replace('%sapper.html%', () => html)
 				.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
+				.replace('%sapper.preloads%', () => preloads)
 				.replace('%sapper.styles%', () => styles);
 
 			res.statusCode = status;
