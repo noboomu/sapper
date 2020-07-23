@@ -225,7 +225,7 @@ export default function extract_css(
 	});
 
 	fs.readdirSync(asset_dir).forEach(file => {
-		if (fs.statSync(`${asset_dir}/${file}`).isDirectory()) return;
+		if (!file.endsWith('.js') || fs.statSync(`${asset_dir}/${file}`).isDirectory()) return;
 
 		const source = fs.readFileSync(`${asset_dir}/${file}`, 'utf-8');
 
@@ -253,7 +253,11 @@ export default function extract_css(
 		fs.writeFileSync(`${asset_dir}/${file}`, replaced);
 	});
 
-	const leftover = get_css_from_modules(Array.from(unclaimed), css_map, asset_dir);
+	unclaimed.forEach(file => {
+		entry_css_modules.push(file);
+	});
+
+	const leftover = get_css_from_modules(entry_css_modules, css_map, asset_dir);
 	if (leftover) {
 		let { code, map } = leftover;
 
