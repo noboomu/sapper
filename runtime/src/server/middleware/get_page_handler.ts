@@ -298,7 +298,7 @@ export function get_page_handler(
 
 			} 
 
-			const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
+		//	const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
 
 			const file = [].concat(build_info.assets.main).filter(file => file && /\.js$/.test(file))[0];
 			const main = `${req.baseUrl}/client/${file}`;
@@ -342,17 +342,17 @@ export function get_page_handler(
 			// users can set a CSP nonce using res.locals.nonce
 			const nonce_attr = (res.locals && res.locals.nonce) ? ` nonce="${res.locals.nonce}"` : '';
 
-			let preloads = '';
+			// let preloads = '';
 
-			if(preloadFiles && preloadFiles.length > 0)
-			{
+			// if(preloadFiles && preloadFiles.length > 0)
+			// {
 	 
 
-				for( var i = 0; i < preloadFiles.length; i++ )
-				{
-					preloads += `<link rel="preload" as="script" href="${req.baseUrl}/client/${preloadFiles[i]}" crossorigin="use-credentials" >`; 
-				} 
-			}
+			// 	for( var i = 0; i < preloadFiles.length; i++ )
+			// 	{
+			// 		preloads += `<link rel="preload" as="script" href="${req.baseUrl}/client/${preloadFiles[i]}" crossorigin="use-credentials" >`; 
+			// 	} 
+			// }
 
 
 			const body = template()
@@ -360,7 +360,7 @@ export function get_page_handler(
 				.replace('%sapper.scripts%', () => `<script${nonce_attr}>${script}</script>`)
 				.replace('%sapper.html%', () => html)
 				.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
-				.replace('%sapper.preloads%', () => preloads)
+			//	.replace('%sapper.preloads%', () => preloads)
 				.replace('%sapper.styles%', () => styles);
 
 			res.statusCode = status;
