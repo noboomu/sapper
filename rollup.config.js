@@ -49,6 +49,7 @@ export default [
 			dir: 'dist',
 			format: 'cjs',
 			sourcemap: true,
+			interop: false,
 			chunkFileNames: '[name].js'
 		},
 		external,
