@@ -3,7 +3,7 @@
 [The next small thing in web development, powered by Svelte.](https://sapper.svelte.dev)
 
 
-## What is Sapper?
+## What is Noboomu Sapper?
 
 Sapper is a framework for building high-performance universal web apps. [Read the guide](https://sapper.svelte.dev/docs) or the [introductory blog post](https://svelte.dev/blog/sapper-towards-the-ideal-web-app-framework) to learn more.
 

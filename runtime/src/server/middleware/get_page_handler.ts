@@ -7,6 +7,7 @@ import fetch from 'node-fetch';
 import URL from 'url';
 import { Manifest, Page, Req, Res } from './types';
 import { build_dir, dev, src_dir } from '@sapper/internal/manifest-server';
+import { transformTemplate } from './template_transform';
 
 import App from '@sapper/internal/App.svelte';
 
@@ -14,6 +15,8 @@ export function get_page_handler(
 	manifest: Manifest,
 	session_getter: (req: Req, res: Res) => Promise<any>
 ) {
+	console.log('get page route handler');
+
 	const get_build_info = dev
 		? () => JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'))
 		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8')));
@@ -347,7 +350,8 @@ export function get_page_handler(
 			}
 
 			// users can set a CSP nonce using res.locals.nonce
-			const nonce_attr = (res.locals && res.locals.nonce) ? ` nonce="${res.locals.nonce}"` : '';
+			const nonce_value = (res.locals && res.locals.nonce) ? res.locals.nonce : '';
+			const nonce_attr = nonce_value ? ` nonce="${nonce_value}"` : ''
 
 			// let preloads = '';
 
@@ -361,14 +365,20 @@ export function get_page_handler(
 			// 	} 
 			// }
 
+			// const body = template()
+			// 	.replace('%sapper.base%', () => `<base href="${req.baseUrl}/">`)
+			// 	.replace('%sapper.scripts%', () => `<script${nonce_attr}>${script}</script>`)
+			// 	.replace('%sapper.html%', () => html)
+			// 	.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
+			// 	//	.replace('%sapper.preloads%', () => preloads)
+			// 	.replace('%sapper.styles%', () => styles);
 
-			const body = template()
-				.replace('%sapper.base%', () => `<base href="${req.baseUrl}/">`)
-				.replace('%sapper.scripts%', () => `<script${nonce_attr}>${script}</script>`)
-				.replace('%sapper.html%', () => html)
-				.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
-			//	.replace('%sapper.preloads%', () => preloads)
-				.replace('%sapper.styles%', () => styles);
+			//console.log('sapper detected bot: ', req.isBot);
+
+			const body = transformTemplate(
+				template(),
+				{req, nonce_attr, nonce_value, html, head,styles, script: req.isBot ? '' : script}
+			);
 
 			res.statusCode = status;
 			res.end(body);

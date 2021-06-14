@@ -47,6 +47,7 @@ export interface Req extends ClientRequest {
 	params: Record<string, string>;
 	query: Record<string, string>;
 	headers: Record<string, string>;
+	isBot: boolean;
 	assetsBaseUrl?: string;
 }
 
