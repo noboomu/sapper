@@ -1,4 +1,5 @@
 import { SapperRequest } from '@sapper/server';
+import {is_bracket_close} from "svelte/types/compiler/parse/utils/bracket";
 
 let TEMPLATE_SECTIONS = null
 
@@ -17,6 +18,7 @@ export type TransformData = Readonly<{
     script: string;
     nonce_value: string;
     nonce_attr: string;
+    is_bot: boolean;
     req: SapperRequest;
 }>;
 
@@ -46,10 +48,11 @@ const transformers: Transformer[] = [
 ];
 
 export function registerTemplateTransformer(transformer: Transformer) {
-    transformers.splice(0, 0, transformer);
+    transformers.push(transformer);
 }
 
 export function transformTemplate(template: string, data: TransformData) {
+
     return transformers.reduce(
         (acc, transformer) => transformer(acc, data),
         template

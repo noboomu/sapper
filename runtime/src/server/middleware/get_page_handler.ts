@@ -15,7 +15,7 @@ export function get_page_handler(
 	manifest: Manifest,
 	session_getter: (req: Req, res: Res) => Promise<any>
 ) {
-	console.log('get page route handler');
+
 
 	const get_build_info = dev
 		? () => JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'))
@@ -373,11 +373,9 @@ export function get_page_handler(
 			// 	//	.replace('%sapper.preloads%', () => preloads)
 			// 	.replace('%sapper.styles%', () => styles);
 
-			//console.log('sapper detected bot: ', req.isBot);
-
 			const body = transformTemplate(
 				template(),
-				{req, nonce_attr, nonce_value, html, head,styles, script: req.isBot ? '' : script}
+				{req, nonce_attr, nonce_value, html, head,styles, script: req.isBot ? '' : script,is_bot: req.isBot}
 			);
 
 			res.statusCode = status;
