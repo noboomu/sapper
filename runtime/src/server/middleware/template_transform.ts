@@ -16,6 +16,7 @@ export type TransformData = Readonly<{
     head: any;
     styles: string;
     script: string;
+    baseUrl: string;
     nonce_value: string;
     nonce_attr: string;
     is_bot: boolean;
@@ -32,7 +33,7 @@ const transformers: Transformer[] = [
             TEMPLATE_SECTIONS = template.split(TOKEN_REGEX);
         }
 
-        return  TEMPLATE_SECTIONS[0] + "<base href=\"" + data.req.baseUrl + "\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.html + TEMPLATE_SECTIONS[3] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[4];
+        return  TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.html + TEMPLATE_SECTIONS[3] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[4];
         // return template
         //     .replace('%sapper.base%', () => `<base href="${data.req.baseUrl}/">`)
         //     .replace(

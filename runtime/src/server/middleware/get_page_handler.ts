@@ -89,7 +89,7 @@ export function get_page_handler(
 			}
 		})
  
-		if (build_info.bundler === 'rollup') {
+		if (build_info.bundler === 'rollup' && !req.isBot ) {
 			// TODO add dependencies and CSS
 			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
@@ -97,7 +97,7 @@ export function get_page_handler(
 				.join(', ');
 
 			res.setHeader('Link', link);
-		} else {
+		} else if(!req.isBot){
 			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
 				.map((file) => {
@@ -375,7 +375,7 @@ export function get_page_handler(
 
 			const body = transformTemplate(
 				template(),
-				{req, nonce_attr, nonce_value, html, head,styles, script: req.isBot ? '' : script,is_bot: req.isBot}
+				{req, nonce_attr, nonce_value, html, head,styles, script: req.isBot ? '' : script,is_bot: req.isBot, baseUrl: req.baseUrl}
 			);
 
 			res.statusCode = status;
