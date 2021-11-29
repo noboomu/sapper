@@ -3,7 +3,7 @@ import {is_bracket_close} from "svelte/types/compiler/parse/utils/bracket";
 
 let TEMPLATE_SECTIONS = null
 
-const TOKENS = ['sapper.base','sapper.head','sapper.html','sapper.scripts'];
+const TOKENS = ['sapper.base','sapper.head','sapper.styles','sapper.html','sapper.scripts'];
 
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()[\]\\]/g, '\\$&');
@@ -33,7 +33,7 @@ const transformers: Transformer[] = [
             TEMPLATE_SECTIONS = template.split(TOKEN_REGEX);
         }
 
-        return  TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.html + TEMPLATE_SECTIONS[3] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[4];
+        return  TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.styles + TEMPLATE_SECTIONS[3] + data.html + TEMPLATE_SECTIONS[4] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[5];
         // return template
         //     .replace('%sapper.base%', () => `<base href="${data.req.baseUrl}/">`)
         //     .replace(
