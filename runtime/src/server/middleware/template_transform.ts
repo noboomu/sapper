@@ -33,6 +33,7 @@ const transformers: Transformer[] = [
             TEMPLATE_SECTIONS = template.split(TOKEN_REGEX);
         }
 
+
         return  TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.styles + TEMPLATE_SECTIONS[3] + data.html + TEMPLATE_SECTIONS[4] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[5];
         // return template
         //     .replace('%sapper.base%', () => `<base href="${data.req.baseUrl}/">`)
