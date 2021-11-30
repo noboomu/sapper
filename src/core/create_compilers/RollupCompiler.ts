@@ -39,6 +39,7 @@ export default class RollupCompiler {
 				this.chunks.push(chunk);
 			},
 			transform: (code: string, id: string) => {
+			
 				if (/\.css$/.test(id)) {
 					this.css_files.push({ id, code });
 					return {code: ``, moduleSideEffects: 'no-treeshake'};
