@@ -109,22 +109,22 @@ export function get_page_handler(
 		})
 
  
-		if (build_info.bundler === 'rollup'  ) {
+		if (build_info.bundler === 'rollup' && !req.isBot ) {
 			// TODO add dependencies and CSS
 
 			if(build_info.cdn)
 			{
 				const jsLinks = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
-				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`);
+				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`).join(', ');
 
-				const cssLinks = preloaded_css
-				.filter(file => file && !file.match(/\.map$/))
-				.map(file => `<${file}>;rel="preload";as="style"`);
+				// const cssLinks = preloaded_css
+				// .filter(file => file && !file.match(/\.map$/))
+				// .map(file => `<${file}>;rel="preload";as="style"`);
  
-				const link = [...jsLinks,...cssLinks].join(', ');
+				// const link = [...jsLinks,...cssLinks].join(', ');
 
-				res.setHeader('Link', link);
+				res.setHeader('Link', jsLinks);
 
 
 			}
@@ -140,15 +140,15 @@ export function get_page_handler(
 
 			const jsLinks = preloaded_chunks
 			.filter(file => file && !file.match(/\.map$/))
-			.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`);
+			.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`).join(', ');
 
-			const cssLinks = preloaded_css
-			.filter(file => file && !file.match(/\.map$/))
-			.map(file => `<${req.baseUrl}/client/${file}>;rel="preload";as="style"`);
+			// const cssLinks = preloaded_css
+			// .filter(file => file && !file.match(/\.map$/))
+			// .map(file => `<${req.baseUrl}/client/${file}>;rel="preload";as="style"`);
 
-			const link = [...jsLinks,...cssLinks].join(', ');
+			// const link = [...jsLinks,...cssLinks].join(', ');
 
-			res.setHeader('Link', link);
+			res.setHeader('Link', jsLinks);
 
 			}
 
