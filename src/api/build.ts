@@ -210,11 +210,11 @@ export async function build({
  
 
 
-	if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
-	{
- 		build_info = prefixAssets(process.env.CDN_PREFIX,build_info);
-		 build_info.cdn = process.env.CDN_PREFIX;
-	}
+	// if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
+	// {
+ 	// 	build_info = prefixAssets(process.env.CDN_PREFIX,build_info);
+	// 	 build_info.cdn = process.env.CDN_PREFIX;
+	// }
 
 
 	fs.writeFileSync(path.join(dest, 'build.json'), JSON.stringify(build_info));
