@@ -110,7 +110,7 @@ export function get_page_handler(
 		})
 
 
-		if (build_info.bundler === 'rollup' && !req.isBot ) {
+		if (build_info.bundler === 'rollup'  ) {
 
 			if(build_info.cdn)
 			{
