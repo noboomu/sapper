@@ -21,13 +21,9 @@ export function get_page_handler(
 
 	const get_build_info = dev
 		? () => {
-			cachedBuildInfo = JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'));
-			return cachedBuildInfo;
+		  JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8')); 
 		}
-		: (assets => () => {
-			cachedBuildInfo =  JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'));
-			return cachedBuildInfo;
-		})();
+		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8' )));
 
 
 	let template = dev
@@ -120,7 +116,7 @@ export function get_page_handler(
 			{
 				const jsLinks = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
-				.map(file => `<${file}>;rel="modulepreload"`);
+				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`);
 
 				const cssLinks = preloaded_css
 				.filter(file => file && !file.match(/\.map$/))
@@ -391,17 +387,9 @@ export function get_page_handler(
 		//	const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
 
 			const file = [].concat(build_info.assets.main).filter(file => file && /\.js$/.test(file))[0];
-			const main = build_info.cdn ? `${file}` : `${req.baseUrl}/client/${file}`;
+			const main = `${req.baseUrl}/client/${file}`;
 
-			if (build_info.bundler === 'rollup' && build_info.cdn) {
-				if (build_info.legacy_assets) {
-					const legacy_main = `${build_info.cdn}/legacy/${build_info.legacy_assets.main}`;
-					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";}catch(e){s.src="${build_info.cdn}/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;
-				} else {
-					script += `var s=document.createElement("script");try{new Function("if(0)import('')")();s.src="${main}";s.type="module";s.crossOrigin="use-credentials";}catch(e){s.src="${build_info.cdn}/shimport@${build_info.shimport}.js";s.setAttribute("data-main","${main}")}document.head.appendChild(s)`;
-				}
-			}
-			else if (build_info.bundler === 'rollup') {
+			 if (build_info.bundler === 'rollup') {
 				if (build_info.legacy_assets) {
 					const legacy_main = `${req.baseUrl}/client/legacy/${build_info.legacy_assets.main}`;
 					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";s.crossOrigin="use-credentials";}catch(e){s.src="${req.baseUrl}/client/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;

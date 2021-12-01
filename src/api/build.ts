@@ -13,7 +13,7 @@ import { rimraf, mkdirp } from './utils/fs_utils';
 
 function prefixAssets(prefix: string, info : BuildInfo) {
 
-	const asset_regex = /"([_A-Za-z0-9.\[\]\-]+\.css|[_A-Za-z0-9.\[\]\-]+\.js)"/g;
+	const asset_regex = /"([_A-Za-z0-9.\[\]\-]+\.css)"/g;
 
 	let build_info_string = JSON.stringify(info)
 
@@ -206,7 +206,7 @@ export async function build({
 		delete process.env.SAPPER_LEGACY_BUILD;
 	}
 
-	build_info = removeEmptyJS(`${dest}/client`,build_info);
+	//build_info = removeEmptyJS(`${dest}/client`,build_info);
  
 
 
