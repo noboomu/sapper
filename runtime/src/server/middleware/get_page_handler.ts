@@ -20,10 +20,8 @@ export function get_page_handler(
 	let cachedBuildInfo = null;
 
 	const get_build_info = dev
-		? () => {
-		  JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8')); 
-		}
-		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8' )));
+		? () => JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'))
+		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8' )))
 
 
 	let template = dev
@@ -68,7 +66,7 @@ export function get_page_handler(
 				chunks: Record<string, string[]>
 			}
 		//  } = cachedBuildInfo != null ? cachedBuildInfo : get_build_info();
-	} =   get_build_info();
+			} =   get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
 		res.setHeader('Cache-Control', dev ? 'no-cache' : 'max-age=600');
