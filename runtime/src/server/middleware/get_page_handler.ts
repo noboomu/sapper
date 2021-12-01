@@ -56,14 +56,8 @@ export function get_page_handler(
 	async function handle_page(page: Page, req: Req, res: Res, status = 200, error: Error | string = null) {
 		const is_service_worker_index = req.path === '/service-worker-index.html';
 
-		let build_info = null;
 
-		if(cachedBuildInfo)
-		{
-			build_info = cachedBuildInfo;
-		}
-		else {
-			const bi: {
+			const build_info: {
 				bundler: 'rollup' | 'webpack',
 				shimport: string | null,
 				assets: Record<string, string | string[]>,
@@ -75,9 +69,6 @@ export function get_page_handler(
 					chunks: Record<string, string[]>
 				}
 			} = get_build_info();
-			cachedBuildInfo = bi;
-			build_info = bi;
-		}
 
 		res.setHeader('Content-Type', 'text/html');
 		res.setHeader('Cache-Control', dev ? 'no-cache' : 'max-age=600');
