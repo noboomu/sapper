@@ -11,9 +11,10 @@ import { copy_runtime } from './utils/copy_runtime';
 import { rimraf, mkdirp } from './utils/fs_utils';
 
 
+
 function prefixAssets(prefix: string, info : BuildInfo) {
 
-	const asset_regex = /"([_A-Za-z0-9.\[\]\-]+\.css)"/g;
+	const asset_regex = /"([_A-Za-z0-9.\[\]\-]+\.css|[_A-Za-z0-9.\[\]\-]+\.js)"/g;
 
 	let build_info_string = JSON.stringify(info)
 
@@ -206,15 +207,15 @@ export async function build({
 		delete process.env.SAPPER_LEGACY_BUILD;
 	}
 
-	//build_info = removeEmptyJS(`${dest}/client`,build_info);
+	build_info = removeEmptyJS(`${dest}/client`,build_info);
  
 
 
-	// if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
-	// {
- 	// 	build_info = prefixAssets(process.env.CDN_PREFIX,build_info);
-	// 	 build_info.cdn = process.env.CDN_PREFIX;
-	// }
+	if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
+	{
+ 		build_info = prefixAssets(process.env.CDN_PREFIX,build_info);
+		 build_info.cdn = process.env.CDN_PREFIX;
+	}
 
 
 	fs.writeFileSync(path.join(dest, 'build.json'), JSON.stringify(build_info));
