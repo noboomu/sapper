@@ -147,7 +147,7 @@ export async function build({
 		throw error;
 	}
 
-	fs.writeFileSync(`${dest}/template.html`, minify_html(template));
+	fs.writeFileSync(`${dest}/template.html`, template);
 
 	const manifest_data = create_manifest_data(routes, ext);
 

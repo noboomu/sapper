@@ -1,5 +1,4 @@
-import { SapperRequest } from '@sapper/server';
-import {is_bracket_close} from "svelte/types/compiler/parse/utils/bracket";
+import {SapperRequest} from '@sapper/server';
 
 let TEMPLATE_SECTIONS = null
 
@@ -9,7 +8,6 @@ function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()[\]\\]/g, '\\$&');
 }
 
-const TOKEN_REGEX = new RegExp('(?:%' + escapeRegExp(TOKENS.join('%|%')) + '%)','g');
 
 export type TransformData = Readonly<{
     html: any;
@@ -28,13 +26,14 @@ export type Transformer = (body: string, data: TransformData) => string;
 const transformers: Transformer[] = [
     (template, data) =>
     {
-        if(TEMPLATE_SECTIONS === null)
+        const TOKEN_REGEX = new RegExp('(?:%' + escapeRegExp(TOKENS.join('%|%')) + '%)','g');
+
+        if(TEMPLATE_SECTIONS == null)
         {
             TEMPLATE_SECTIONS = template.split(TOKEN_REGEX);
         }
 
-
-        return  TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.styles + TEMPLATE_SECTIONS[3] + data.html + TEMPLATE_SECTIONS[4] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[5];
+        return TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.styles + TEMPLATE_SECTIONS[3] + data.html + TEMPLATE_SECTIONS[4] + "<script " + data.nonce_attr + " >" + data.script + "</script>" + TEMPLATE_SECTIONS[5];
         // return template
         //     .replace('%sapper.base%', () => `<base href="${data.req.baseUrl}/">`)
         //     .replace(

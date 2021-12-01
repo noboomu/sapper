@@ -17,11 +17,10 @@ export function get_page_handler(
 ) {
 
 
-	let cachedBuildInfo = null;
 
 	const get_build_info = dev
 		? () => JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'))
-		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8' )))
+		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8')));
 
 
 	let template = dev
@@ -59,14 +58,8 @@ export function get_page_handler(
 			shimport: string | null,
 			assets: Record<string, string | string[]>,
 			legacy_assets?: Record<string, string>,
-			script_preloads?: Record<string, string[]>,
-			cdn?: string;
-			css?: {
-				main: string | null,
-				chunks: Record<string, string[]>
-			}
-		//  } = cachedBuildInfo != null ? cachedBuildInfo : get_build_info();
-			} =   get_build_info();
+			script_preloads?: Record<string, string[]>
+		} =   get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
 		res.setHeader('Cache-Control', dev ? 'no-cache' : 'max-age=600');
@@ -97,78 +90,19 @@ export function get_page_handler(
 				})
 			}
 
-			if (build_info.css && part && build_info.css.chunks[part.file]) {
-				build_info.css.chunks[part.file].forEach((preloadFile) => {
-					if (preloaded_css.indexOf(preloadFile) === -1) {
-						preloaded_css.push(preloadFile)
-					}
-				})
-			}
+
 		})
 
- 
+
 		if (build_info.bundler === 'rollup' && !req.isBot ) {
 			// TODO add dependencies and CSS
-
-			if(build_info.cdn)
-			{
-				const jsLinks = preloaded_chunks
+			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
-				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`).join(', ');
-
-				// const cssLinks = preloaded_css
-				// .filter(file => file && !file.match(/\.map$/))
-				// .map(file => `<${file}>;rel="preload";as="style"`);
- 
-				// const link = [...jsLinks,...cssLinks].join(', ');
-
-				res.setHeader('Link', jsLinks);
-
-
-			}
-			else
-			{
-
-			// const link = preloaded_chunks
-			// 	.filter(file => file && !file.match(/\.map$/))
-			// 	.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`)
-			// 	.join(', ');
-
-			// res.setHeader('Link', link);
-
-			const jsLinks = preloaded_chunks
-			.filter(file => file && !file.match(/\.map$/))
-			.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`).join(', ');
-
-			// const cssLinks = preloaded_css
-			// .filter(file => file && !file.match(/\.map$/))
-			// .map(file => `<${req.baseUrl}/client/${file}>;rel="preload";as="style"`);
-
-			// const link = [...jsLinks,...cssLinks].join(', ');
-
-			res.setHeader('Link', jsLinks);
-
-			}
-
-
-
-		} else if(!req.isBot){
-			if(build_info.cdn)
-			{
-				const link = preloaded_chunks
-				.filter(file => file && !file.match(/\.map$/))
-				.map((file) => {
-					const as = /\.css$/.test(file) ? 'style' : 'script';
-					return `<${file}>;rel="preload";as="${as}"`;
-				})
+				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`)
 				.join(', ');
 
 			res.setHeader('Link', link);
-			}
-			else
-			{
-
-
+		} else if(!req.isBot){
 			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
 				.map((file) => {
@@ -178,9 +112,6 @@ export function get_page_handler(
 				.join(', ');
 
 			res.setHeader('Link', link);
-
-
-			}
 		}
 
 		let session;
@@ -416,18 +347,18 @@ export function get_page_handler(
 					}
 				});
 
-				if(!build_info.cdn)
-				{
+				// if(!build_info.cdn)
+				// {
 				styles = Array.from(css_chunks)
 					.map(href => `<link rel="stylesheet" href="client/${href}">`)
 					.join('')
-				}
-				else
-				{
-					styles = Array.from(css_chunks)
-					.map(href => `<link rel="stylesheet" href="${href}">`)
-					.join('')
-				}
+				// }
+				// else
+				// {
+				// 	styles = Array.from(css_chunks)
+				// 	.map(href => `<link rel="stylesheet" href="${href}">`)
+				// 	.join('')
+				// }
 			} else {
 				styles = (css && css.code ? `<style>${css.code}</style>` : '');
 			}
