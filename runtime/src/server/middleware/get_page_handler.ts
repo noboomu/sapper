@@ -64,10 +64,6 @@ export function get_page_handler(
 				legacy_assets?: Record<string, string>,
 				script_preloads?: Record<string, string[]>,
 				cdn?: string;
-				css?: {
-					main: string | null,
-					chunks: Record<string, string[]>
-				}
 			} = get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
@@ -99,13 +95,7 @@ export function get_page_handler(
 				})
 			}
 
-			if (build_info.css && part && build_info.css.chunks[part.file]) {
-				build_info.css.chunks[part.file].forEach((preloadFile) => {
-					if (preloaded_css.indexOf(preloadFile) === -1) {
-						preloaded_css.push(preloadFile)
-					}
-				});
-			}
+
 
 		})
 
@@ -428,7 +418,7 @@ export function get_page_handler(
 
 			const body = transformTemplate(
 				template(),
-				{req, nonce_attr, nonce_value, html, head,styles, script: req.isBot ? '' : script,is_bot: req.isBot, baseUrl: req.baseUrl}
+				{req, nonce_attr, nonce_value, html, head,styles,script,is_bot: req.isBot, baseUrl: req.baseUrl}
 			);
 
 			res.statusCode = status;
