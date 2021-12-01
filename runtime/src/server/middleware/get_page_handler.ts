@@ -103,8 +103,8 @@ export function get_page_handler(
 				})
 			}
 
-			if (build_info.css && part && build_info.css[part.file]) {
-				build_info.css[part.file].forEach((preloadFile) => {
+			if (build_info.css && part && build_info.css.chunks[part.file]) {
+				build_info.css.chunks[part.file].forEach((preloadFile) => {
 					if (preloaded_css.indexOf(preloadFile) === -1) {
 						preloaded_css.push(preloadFile)
 					}
@@ -112,34 +112,52 @@ export function get_page_handler(
 			}
 		})
 
-		console.log({preloaded_css})
-
-
-
-	 
-
  
-		if (build_info.bundler === 'rollup' && !req.isBot ) {
+		if (build_info.bundler === 'rollup'  ) {
 			// TODO add dependencies and CSS
 
 			if(build_info.cdn)
 			{
-				const link = preloaded_chunks
+				const jsLinks = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
-				.map(file => `<${file}>;rel="modulepreload"`)
-				.join(', ');
+				.map(file => `<${file}>;rel="modulepreload"`);
 
-			res.setHeader('Link', link);
+				const cssLinks = preloaded_css
+				.filter(file => file && !file.match(/\.map$/))
+				.map(file => `<${file}>;rel="preload";as="style"`);
+ 
+				const link = [...jsLinks,...cssLinks].join(', ');
+
+				res.setHeader('Link', link);
+
+
 			}
 			else
 			{
-			const link = preloaded_chunks
-				.filter(file => file && !file.match(/\.map$/))
-				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`)
-				.join(', ');
+
+			// const link = preloaded_chunks
+			// 	.filter(file => file && !file.match(/\.map$/))
+			// 	.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`)
+			// 	.join(', ');
+
+			// res.setHeader('Link', link);
+
+			const jsLinks = preloaded_chunks
+			.filter(file => file && !file.match(/\.map$/))
+			.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`);
+
+			const cssLinks = preloaded_css
+			.filter(file => file && !file.match(/\.map$/))
+			.map(file => `<${req.baseUrl}/client/${file}>;rel="preload";as="style"`);
+
+			const link = [...jsLinks,...cssLinks].join(', ');
 
 			res.setHeader('Link', link);
+
 			}
+
+
+
 		} else if(!req.isBot){
 			if(build_info.cdn)
 			{
@@ -155,6 +173,8 @@ export function get_page_handler(
 			}
 			else
 			{
+
+
 			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
 				.map((file) => {
@@ -164,6 +184,8 @@ export function get_page_handler(
 				.join(', ');
 
 			res.setHeader('Link', link);
+
+
 			}
 		}
 

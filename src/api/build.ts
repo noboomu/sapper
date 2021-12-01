@@ -174,8 +174,6 @@ export async function build({
 	});
 
  
-	console.log({client_result:JSON.stringify(client_result,null,2)})
-
 	let build_info = client_result.to_json(manifest_data, { src, routes, dest });
 
 	build_info.legacy_assets = client_result.assets;
