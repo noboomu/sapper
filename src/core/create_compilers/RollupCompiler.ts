@@ -3,7 +3,7 @@ import color from 'kleur';
 import relative from 'require-relative';
 import { RollupError } from 'rollup/types';
 import { CompileResult } from './interfaces';
-import RollupResult from './RollupResult';
+import RollupResult from './RollupResult'; 
 
 const stderr = console.error.bind(console);
 

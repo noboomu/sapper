@@ -4,11 +4,90 @@ import minify_html from './utils/minify_html';
 import { create_compilers, create_app, create_manifest_data, create_serviceworker_manifest } from '../core';
 import { copy_shimport } from './utils/copy_shimport';
 import read_template from '../core/read_template';
-import { CompileResult } from '../core/create_compilers/interfaces';
+import { BuildInfo, CompileResult } from '../core/create_compilers/interfaces';
 import { noop } from './utils/noop';
 import validate_bundler from './utils/validate_bundler';
 import { copy_runtime } from './utils/copy_runtime';
 import { rimraf, mkdirp } from './utils/fs_utils';
+
+
+function prefixAssets(prefix: string, info : BuildInfo) {
+
+	const asset_regex = /"([_A-Za-z0-9.\[\]\-]+\.css|[_A-Za-z0-9.\[\]\-]+\.js)"/g;
+
+	let build_info_string = JSON.stringify(info)
+
+	const prefixed_build_indo = build_info_string.replace(asset_regex, function(i, match) {
+		return `"${prefix}/${match}"`;
+	});
+
+	return JSON.parse(prefixed_build_indo);
+
+}
+
+
+function removeEmptyJS(prefix: string, info : BuildInfo) {
+
+	let jsFiles = new Set();
+
+	let emptyFiles = new Set();
+
+	const script_preloads = info.script_preloads;
+
+	let updatedPreloads = {};
+
+	let paths = Object.keys(script_preloads);
+  
+	for( let i = 0; i < paths.length; i+= 1)
+	{
+		const files = script_preloads[paths[i]];
+
+		for( let j = 0; j < files.length; j+= 1)
+		{
+			const filename = files[j];
+			
+			if(jsFiles.has(filename))
+			{
+				continue;
+			}
+
+			try
+			{
+				const stats = fs.statSync(`${prefix}/${filename}`);
+
+				if(stats && stats.size <= 1)
+				{
+					emptyFiles.add(filename);
+				}
+
+				jsFiles.add(filename);
+
+			} catch(err)
+			{
+				console.log('failed to get info for file ', filename,err);
+			}
+
+		}
+
+		let updatedFiles = [...files];
+
+		for( let j = 0; j < files.length; j+= 1)
+		{
+			const filename = files[j];
+			if(emptyFiles.has(filename))
+			{
+				updatedFiles.splice(j,1);
+			} 
+		}
+
+ 
+
+		updatedPreloads[paths[i]] = [...updatedFiles];
+
+	} 
+
+	return {...info,script_preloads:updatedPreloads};
+}
 
 type Opts = {
 	cwd?: string;
@@ -73,7 +152,7 @@ export async function build({
 	const manifest_data = create_manifest_data(routes, ext);
 
 	const { client, server, serviceworker } = await create_compilers(bundler, cwd, src, dest, false);
-
+ 
  
 	// create src/node_modules/@sapper/app.mjs and server.mjs
 	create_app({
@@ -88,17 +167,22 @@ export async function build({
 	});
 
 	const client_result = await client.compile();
+
 	oncompile({
 		type: 'client',
 		result: client_result
 	});
 
  
+	console.log({client_result:JSON.stringify(client_result,null,2)})
 
-	const build_info = client_result.to_json(manifest_data, { src, routes, dest });
+	let build_info = client_result.to_json(manifest_data, { src, routes, dest });
 
 	build_info.legacy_assets = client_result.assets;
 	build_info.script_preloads = {};
+
+ 
+
 	if (client_result.script_preloads) {
 		Object.keys(client_result.script_preloads).forEach((facadeFileName) => {
 			// get relative filename, remove / or \ from the beginning of the string
@@ -124,8 +208,20 @@ export async function build({
 		delete process.env.SAPPER_LEGACY_BUILD;
 	}
 
+	build_info = removeEmptyJS(`${dest}/client`,build_info);
+ 
+
+
+	if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
+	{
+ 		build_info = prefixAssets(process.env.CDN_PREFIX,build_info);
+		 build_info.cdn = process.env.CDN_PREFIX;
+	}
+
+
 	fs.writeFileSync(path.join(dest, 'build.json'), JSON.stringify(build_info));
 
+ 
 	const server_stats = await server.compile();
 	oncompile({
 		type: 'server',

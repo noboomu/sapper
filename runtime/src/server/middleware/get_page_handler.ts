@@ -17,9 +17,17 @@ export function get_page_handler(
 ) {
 
 
+	let cachedBuildInfo = null;
+
 	const get_build_info = dev
-		? () => JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'))
-		: (assets => () => assets)(JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8')));
+		? () => {
+			cachedBuildInfo = JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'));
+			return cachedBuildInfo;
+		}
+		: (assets => () => {
+			cachedBuildInfo =  JSON.parse(fs.readFileSync(path.join(build_dir, 'build.json'), 'utf-8'));
+			return cachedBuildInfo;
+		})();
 
 
 	let template = dev
@@ -51,13 +59,20 @@ export function get_page_handler(
 
 	async function handle_page(page: Page, req: Req, res: Res, status = 200, error: Error | string = null) {
 		const is_service_worker_index = req.path === '/service-worker-index.html';
+
 		const build_info: {
 			bundler: 'rollup' | 'webpack',
 			shimport: string | null,
 			assets: Record<string, string | string[]>,
 			legacy_assets?: Record<string, string>,
-			script_preloads?: Record<string, string[]>
-		 } = get_build_info();
+			script_preloads?: Record<string, string[]>,
+			cdn?: string;
+			css?: {
+				main: string | null,
+				chunks: Record<string, string[]>
+			}
+		//  } = cachedBuildInfo != null ? cachedBuildInfo : get_build_info();
+	} =   get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
 		res.setHeader('Cache-Control', dev ? 'no-cache' : 'max-age=600');
@@ -66,7 +81,7 @@ export function get_page_handler(
 		// TODO detect other stuff we can preload? images, CSS, fonts?
 		let preloaded_chunks = Array.isArray(build_info.assets.main) ? build_info.assets.main : [build_info.assets.main];
 
-
+		let preloaded_css = [];
 
 		if (!error && !is_service_worker_index) {
 			page.parts.forEach(part => {
@@ -87,17 +102,59 @@ export function get_page_handler(
 					}
 				})
 			}
+
+			if (build_info.css && part && build_info.css[part.file]) {
+				build_info.css[part.file].forEach((preloadFile) => {
+					if (preloaded_css.indexOf(preloadFile) === -1) {
+						preloaded_css.push(preloadFile)
+					}
+				})
+			}
 		})
+
+		console.log({preloaded_css})
+
+
+
+	 
+
  
 		if (build_info.bundler === 'rollup' && !req.isBot ) {
 			// TODO add dependencies and CSS
+
+			if(build_info.cdn)
+			{
+				const link = preloaded_chunks
+				.filter(file => file && !file.match(/\.map$/))
+				.map(file => `<${file}>;rel="modulepreload"`)
+				.join(', ');
+
+			res.setHeader('Link', link);
+			}
+			else
+			{
 			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
 				.map(file => `<${req.baseUrl}/client/${file}>;rel="modulepreload"`)
 				.join(', ');
 
 			res.setHeader('Link', link);
+			}
 		} else if(!req.isBot){
+			if(build_info.cdn)
+			{
+				const link = preloaded_chunks
+				.filter(file => file && !file.match(/\.map$/))
+				.map((file) => {
+					const as = /\.css$/.test(file) ? 'style' : 'script';
+					return `<${file}>;rel="preload";as="${as}"`;
+				})
+				.join(', ');
+
+			res.setHeader('Link', link);
+			}
+			else
+			{
 			const link = preloaded_chunks
 				.filter(file => file && !file.match(/\.map$/))
 				.map((file) => {
@@ -107,6 +164,7 @@ export function get_page_handler(
 				.join(', ');
 
 			res.setHeader('Link', link);
+			}
 		}
 
 		let session;
@@ -311,9 +369,17 @@ export function get_page_handler(
 		//	const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
 
 			const file = [].concat(build_info.assets.main).filter(file => file && /\.js$/.test(file))[0];
-			const main = `${req.baseUrl}/client/${file}`;
+			const main = build_info.cdn ? `${file}` : `${req.baseUrl}/client/${file}`;
 
-			if (build_info.bundler === 'rollup') {
+			if (build_info.bundler === 'rollup' && build_info.cdn) {
+				if (build_info.legacy_assets) {
+					const legacy_main = `${build_info.cdn}/legacy/${build_info.legacy_assets.main}`;
+					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";}catch(e){s.src="${build_info.cdn}/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;
+				} else {
+					script += `var s=document.createElement("script");try{new Function("if(0)import('')")();s.src="${main}";s.type="module";s.crossOrigin="use-credentials";}catch(e){s.src="${build_info.cdn}/shimport@${build_info.shimport}.js";s.setAttribute("data-main","${main}")}document.head.appendChild(s)`;
+				}
+			}
+			else if (build_info.bundler === 'rollup') {
 				if (build_info.legacy_assets) {
 					const legacy_main = `${req.baseUrl}/client/legacy/${build_info.legacy_assets.main}`;
 					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";s.crossOrigin="use-credentials";}catch(e){s.src="${req.baseUrl}/client/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;
@@ -342,9 +408,18 @@ export function get_page_handler(
 					}
 				});
 
+				if(!build_info.cdn)
+				{
 				styles = Array.from(css_chunks)
 					.map(href => `<link rel="stylesheet" href="client/${href}">`)
 					.join('')
+				}
+				else
+				{
+					styles = Array.from(css_chunks)
+					.map(href => `<link rel="stylesheet" href="${href}">`)
+					.join('')
+				}
 			} else {
 				styles = (css && css.code ? `<style>${css.code}</style>` : '');
 			}
