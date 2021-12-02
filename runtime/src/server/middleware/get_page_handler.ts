@@ -60,8 +60,7 @@ export function get_page_handler(
 				shimport: string | null,
 				assets: Record<string, string | string[]>,
 				legacy_assets?: Record<string, string>,
-				script_preloads?: Record<string, string[]>,
-				cdn?: string;
+				script_preloads?: Record<string, string[]>
 			} = get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
@@ -100,7 +99,7 @@ export function get_page_handler(
 
 		if (build_info.bundler === 'rollup'  ) {
 
-			if(build_info.cdn)
+			if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
 			{
 				const link = preloaded_chunks
 					.filter(file => file && !file.match(/\.map$/))
@@ -334,15 +333,15 @@ export function get_page_handler(
 		//	const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
 
 			const file = [].concat(build_info.assets.main).filter(file => file && /\.js$/.test(file))[0];
-			const main = build_info.cdn ? `${file}` : `${req.baseUrl}/client/${file}`;
+			const main =	process.env.CDN_PREFIX ? `${file}` : `${req.baseUrl}/client/${file}`;
 
 
-			if (build_info.bundler === 'rollup' && build_info.cdn) {
+			if (build_info.bundler === 'rollup' && process.env.CDN_PREFIX) {
 				if (build_info.legacy_assets) {
-					const legacy_main = `${build_info.cdn}/legacy/${build_info.legacy_assets.main}`;
-					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";}catch(e){s.src="${build_info.cdn}/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;
+					const legacy_main = `${process.env.CDN_PREFIX}/legacy/${build_info.legacy_assets.main}`;
+					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";}catch(e){s.src="${process.env.CDN_PREFIX}/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;
 				} else {
-					script += `var s=document.createElement("script");try{new Function("if(0)import('')")();s.src="${main}";s.type="module";}catch(e){s.src="${build_info.cdn}/shimport@${build_info.shimport}.js";s.setAttribute("data-main","${main}")}document.head.appendChild(s)`;
+					script += `var s=document.createElement("script");try{new Function("if(0)import('')")();s.src="${main}";s.type="module";}catch(e){s.src="${process.env.CDN_PREFIX}/shimport@${build_info.shimport}.js";s.setAttribute("data-main","${main}")}document.head.appendChild(s)`;
 				}
 			}
 			 else if (build_info.bundler === 'rollup') {
@@ -406,18 +405,18 @@ export function get_page_handler(
 			// 	} 
 			// }
 
-			// const body = template()
-			// 	.replace('%sapper.base%', () => `<base href="${req.baseUrl}/">`)
-			// 	.replace('%sapper.scripts%', () => `<script${nonce_attr}>${script}</script>`)
-			// 	.replace('%sapper.html%', () => html)
-			// 	.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
-			// 	//	.replace('%sapper.preloads%', () => preloads)
-			// 	.replace('%sapper.styles%', () => styles);
+			const body = template()
+				.replace('%sapper.base%', () => `<base href="${req.baseUrl}/">`)
+				.replace('%sapper.scripts%', () => `<script${nonce_attr}>${script}</script>`)
+				.replace('%sapper.html%', () => html)
+				.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
+				//	.replace('%sapper.preloads%', () => preloads)
+				.replace('%sapper.styles%', () => styles);
 
-			const body = transformTemplate(
-				template(),
-				{req, nonce_attr, nonce_value, html, head,styles,script,is_bot: req.isBot, baseUrl: req.baseUrl}
-			);
+			// const body = transformTemplate(
+			// 	template(),
+			// 	{req, nonce_attr, nonce_value, html, head,styles,script,is_bot: req.isBot, baseUrl: req.baseUrl}
+			// );
 
 			res.statusCode = status;
 			res.end(body);

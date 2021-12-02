@@ -14,7 +14,6 @@ export default class RollupResult implements CompileResult {
 	chunks: Chunk[];
 	assets: Record<string, string>;
 	script_preloads: Record<string, string[]>;
-	cdn?: string;
 	css_files: CssFile[];
 	css: {
 		main: string,

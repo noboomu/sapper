@@ -33,7 +33,6 @@ export type BuildInfo = {
 	assets: Record<string, string>;
 	legacy_assets?: Record<string, string>;
 	script_preloads: Record<string, string[]>;
-	cdn?: string;
 	css: {
 		main: string | null,
 		chunks: Record<string, string[]>
