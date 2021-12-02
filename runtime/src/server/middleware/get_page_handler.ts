@@ -60,7 +60,8 @@ export function get_page_handler(
 				shimport: string | null,
 				assets: Record<string, string | string[]>,
 				legacy_assets?: Record<string, string>,
-				script_preloads?: Record<string, string[]>
+				script_preloads?: Record<string, string[]>,
+				cdn?: string
 			} = get_build_info();
 
 		res.setHeader('Content-Type', 'text/html');
@@ -70,7 +71,6 @@ export function get_page_handler(
 		// TODO detect other stuff we can preload? images, CSS, fonts?
 		let preloaded_chunks = Array.isArray(build_info.assets.main) ? build_info.assets.main : [build_info.assets.main];
 
-		let preloaded_css = [];
 
 		if (!error && !is_service_worker_index) {
 			page.parts.forEach(part => {
@@ -99,7 +99,7 @@ export function get_page_handler(
 
 		if (build_info.bundler === 'rollup'  ) {
 
-			if(process.env.CDN_PREFIX && process.env.CDN_PREFIX != null)
+			if(build_info.cdn)
 			{
 				const link = preloaded_chunks
 					.filter(file => file && !file.match(/\.map$/))
@@ -333,10 +333,10 @@ export function get_page_handler(
 		//	const preloadFiles = (page.parts && page.parts[0] && page.parts[0].file) ? build_info.script_preloads[page.parts[0].file] : null;
 
 			const file = [].concat(build_info.assets.main).filter(file => file && /\.js$/.test(file))[0];
-			const main =	process.env.CDN_PREFIX ? `${file}` : `${req.baseUrl}/client/${file}`;
+			const main =	build_info.cdn ? `${file}` : `${req.baseUrl}/client/${file}`;
 
 
-			if (build_info.bundler === 'rollup' && process.env.CDN_PREFIX) {
+			if (build_info.bundler === 'rollup' && build_info.cdn) {
 				if (build_info.legacy_assets) {
 					const legacy_main = `${process.env.CDN_PREFIX}/legacy/${build_info.legacy_assets.main}`;
 					script += `(function(){try{eval("async function x(){}");var main="${main}"}catch(e){main="${legacy_main}"};var s=document.createElement("script");try{new Function("if(0)import('')")();s.src=main;s.type="module";}catch(e){s.src="${process.env.CDN_PREFIX}/shimport@${build_info.shimport}.js";s.setAttribute("data-main",main);}document.head.appendChild(s);}());`;

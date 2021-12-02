@@ -36,5 +36,5 @@ export type BuildInfo = {
 	css: {
 		main: string | null,
 		chunks: Record<string, string[]>
-	}
+	},cdn?: string
 }
