@@ -34,7 +34,7 @@ const transformers: Transformer[] = [
         }
 
 
-        return TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] +  TEMPLATE_SECTIONS[3] + data.html + TEMPLATE_SECTIONS[4] + "<script " + data.nonce_attr + " >" + data.script + "</script>"
+        return TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.styles + TEMPLATE_SECTIONS[3] + data.html + TEMPLATE_SECTIONS[4] + "<script " + data.nonce_attr + " >" + data.script + "</script>"
             + TEMPLATE_SECTIONS[5];
         // return template
         //     .replace('%sapper.base%', () => `<base href="${data.req.baseUrl}/">`)
