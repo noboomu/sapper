@@ -33,7 +33,8 @@ const transformers: Transformer[] = [
             TEMPLATE_SECTIONS = template.split(TOKEN_REGEX);
         }
 
-        return  TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.html.replace(/%sapper\.cspnonce%/g, () => data.nonce_value) + TEMPLATE_SECTIONS[3] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>" + TEMPLATE_SECTIONS[4];
+        return  (TEMPLATE_SECTIONS[0] + "<base href=\"/\" >" + TEMPLATE_SECTIONS[1] + data.head + TEMPLATE_SECTIONS[2] + data.html + TEMPLATE_SECTIONS[3] + "<script " +  data.nonce_attr + " >" + data.script +  "</script>"
+            + TEMPLATE_SECTIONS[4]).replace(/%sapper\.cspnonce%/g, () => data.nonce_value);
         // return template
         //     .replace('%sapper.base%', () => `<base href="${data.req.baseUrl}/">`)
         //     .replace(
