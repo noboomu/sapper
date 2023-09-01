@@ -347,7 +347,8 @@ export function get_page_handler(
 			}
 
 			// users can set a CSP nonce using res.locals.nonce
-			const nonce_attr = (res.locals && res.locals.nonce) ? ` nonce="${res.locals.nonce}"` : '';
+			const nonce_value = (res.locals && res.locals.nonce) ? res.locals.nonce : '';
+			const nonce_attr = nonce_value ? ` nonce="${nonce_value}"` : '';
 
 			// let preloads = '';
 
@@ -368,7 +369,8 @@ export function get_page_handler(
 				.replace('%sapper.html%', () => html)
 				.replace('%sapper.head%', () => `<noscript id='sapper-head-start'></noscript>${head}<noscript id='sapper-head-end'></noscript>`)
 			//	.replace('%sapper.preloads%', () => preloads)
-				.replace('%sapper.styles%', () => styles);
+				.replace('%sapper.styles%', () => styles)
+				.replace(/%sapper\.cspnonce%/g, () => nonce_value);
 
 			res.statusCode = status;
 			res.end(body);
