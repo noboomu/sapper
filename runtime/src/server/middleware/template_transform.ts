@@ -3,7 +3,7 @@ import {is_bracket_close} from "svelte/types/compiler/parse/utils/bracket";
 
 let TEMPLATE_SECTIONS = null
 
-const TOKENS = ['sapper.base','sapper.head','sapper.html','sapper.scripts','sapper.cspnonce'];
+const TOKENS = ['sapper.base','sapper.head','sapper.html','sapper.scripts'];
 
 function escapeRegExp(string) {
     return string.replace(/[.*+?^${}()[\]\\]/g, '\\$&');
