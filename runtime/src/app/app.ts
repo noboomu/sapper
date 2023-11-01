@@ -73,8 +73,8 @@ export function set_cid(n) {
 }
 
 const _history = typeof history !== 'undefined' ? history : {
-	pushState: (state: any, title: string, href: string) => {},
-	replaceState: (state: any, title: string, href: string) => {},
+	pushState: (state: any, title: string, href: string) => { },
+	replaceState: (state: any, title: string, href: string) => { },
 	scrollRestoration: ''
 };
 export { _history as history };
@@ -188,27 +188,66 @@ export async function navigate(target: Target, id: number, noscroll?: boolean, h
 	const { redirect, props, branch } = await loaded;
 	if (token !== current_token) return; // a secondary navigation happened while we were loading
 
-	await render(redirect, branch, props, target.page);
-	if (document.activeElement) document.activeElement.blur();
 
-	if (!noscroll) {
-		let scroll = scroll_history[id];
+	if (!document.startViewTransition) {
+		await render(redirect, branch, props, target.page);
 
-		if (hash) {
-			// scroll is an element id (from a hash), we need to compute y.
-			const deep_linked = document.getElementById(hash.slice(1));
+		if (document.activeElement) document.activeElement.blur();
 
-			if (deep_linked) {
-				scroll = {
-					x: 0,
-					y: deep_linked.getBoundingClientRect().top + scrollY
-				};
+		if (!noscroll) {
+			let scroll = scroll_history[id];
+
+			if (hash) {
+				// scroll is an element id (from a hash), we need to compute y.
+				const deep_linked = document.getElementById(hash.slice(1));
+
+				if (deep_linked) {
+					scroll = {
+						x: 0,
+						y: deep_linked.getBoundingClientRect().top + scrollY
+					};
+				}
 			}
-		}
 
-		scroll_history[cid] = scroll;
-		if (scroll) scrollTo(scroll.x, scroll.y);
+			scroll_history[cid] = scroll;
+			if (scroll) scrollTo(scroll.x, scroll.y);
+		}
 	}
+	else {
+		const transition = document.startViewTransition(async () => {
+
+			await render(redirect, branch, props, target.page);
+
+
+			if (document.activeElement) document.activeElement.blur();
+
+			if (!noscroll) {
+				let scroll = scroll_history[id];
+
+				if (hash) {
+					// scroll is an element id (from a hash), we need to compute y.
+					const deep_linked = document.getElementById(hash.slice(1));
+
+					if (deep_linked) {
+						scroll = {
+							x: 0,
+							y: deep_linked.getBoundingClientRect().top + scrollY
+						};
+					}
+				}
+
+				scroll_history[cid] = scroll;
+				if (scroll) scrollTo(scroll.x, scroll.y);
+			}
+
+
+
+
+		});
+		console.log({ transition });
+	}
+
+
 }
 
 async function render(redirect: Redirect, branch: any[], props: any, page: Page) {
