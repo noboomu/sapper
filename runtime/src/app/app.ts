@@ -244,7 +244,7 @@ export async function navigate(target: Target, id: number, noscroll?: boolean, h
 
 
 		});
-		console.log({ transition });
+	 
 	}
 
 
