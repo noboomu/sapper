@@ -28,6 +28,7 @@ let current_query = '{}';
 const stores = {
 	page: page_store({}),
 	preloading: writable(null),
+	transition: writable(null),
 	session: writable(initial_data && initial_data.session)
 };
 
@@ -189,7 +190,7 @@ export async function navigate(target: Target, id: number, noscroll?: boolean, h
 	if (token !== current_token) return; // a secondary navigation happened while we were loading
 
 
-	if (!document.startViewTransition) {
+	//if (!document.startViewTransition) {
 		await render(redirect, branch, props, target.page);
 
 		if (document.activeElement) document.activeElement.blur();
@@ -212,40 +213,45 @@ export async function navigate(target: Target, id: number, noscroll?: boolean, h
 			scroll_history[cid] = scroll;
 			if (scroll) scrollTo(scroll.x, scroll.y);
 		}
-	}
-	else {
-		const transition = document.startViewTransition(async () => {
+	//}
+	// else {
+	//
+	// 	stores.transition.set(null) ;
+	//
+	// 	const transition = document.startViewTransition(async () => {
+	//
+	// 		await render(redirect, branch, props, target.page);
+	//
+	//
+	// 		if (document.activeElement) document.activeElement.blur();
+	//
+	// 		if (!noscroll) {
+	// 			let scroll = scroll_history[id];
+	//
+	// 			if (hash) {
+	// 				// scroll is an element id (from a hash), we need to compute y.
+	// 				const deep_linked = document.getElementById(hash.slice(1));
+	//
+	// 				if (deep_linked) {
+	// 					scroll = {
+	// 						x: 0,
+	// 						y: deep_linked.getBoundingClientRect().top + scrollY
+	// 					};
+	// 				}
+	// 			}
+	//
+	// 			scroll_history[cid] = scroll;
+	// 			if (scroll) scrollTo(scroll.x, scroll.y);
+	// 		}
+	//
+	//
+	//
+	//
+	// 	});
 
-			await render(redirect, branch, props, target.page);
+	//	stores.transition.set(transition) ;
 
-
-			if (document.activeElement) document.activeElement.blur();
-
-			if (!noscroll) {
-				let scroll = scroll_history[id];
-
-				if (hash) {
-					// scroll is an element id (from a hash), we need to compute y.
-					const deep_linked = document.getElementById(hash.slice(1));
-
-					if (deep_linked) {
-						scroll = {
-							x: 0,
-							y: deep_linked.getBoundingClientRect().top + scrollY
-						};
-					}
-				}
-
-				scroll_history[cid] = scroll;
-				if (scroll) scrollTo(scroll.x, scroll.y);
-			}
-
-
-
-
-		});
-	 
-	}
+	//}
 
 
 }
@@ -255,6 +261,7 @@ async function render(redirect: Redirect, branch: any[], props: any, page: Page)
 
 	stores.page.set(page);
 	stores.preloading.set(false);
+	stores.transition.set(null);
 
 	if (root_component) {
 		root_component.$set(props);
@@ -262,6 +269,7 @@ async function render(redirect: Redirect, branch: any[], props: any, page: Page)
 		props.stores = {
 			page: { subscribe: stores.page.subscribe },
 			preloading: { subscribe: stores.preloading.subscribe },
+			transition: { subscribe: stores.transition.subscribe },
 			session: stores.session
 		};
 		props.level0 = {
